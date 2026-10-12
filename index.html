@@ -37,16 +37,53 @@
   .layout>*,.col-left,.col-right,.panel{min-width:0;max-width:100%}
   @media(max-width:899px){
     .col-right{display:contents}
-    .panel-controls{order:1}.col-left{order:2}.panel-videos{order:3}.panel-data{order:4}
-    .layout{gap:0}.videos{max-height:none;overflow:visible}.table-wrap{max-height:50vh}
+    /* urutan HP: preview (nempel di atas) -> data -> kontrol -> latar -> outro -> hasil */
+    .col-left{order:1;position:sticky;top:env(safe-area-inset-top,0px);z-index:30;align-self:start;margin-bottom:10px}
+    .panel-data{order:2}.panel-controls{order:3}#customBgPanel{order:4}#outroPanel{order:5}.panel-videos{order:6}
+    .layout{gap:0}.videos{max-height:none;overflow:visible}.table-wrap{max-height:34vh}
+    .pv-panel{flex-direction:row;align-items:flex-start;gap:10px;padding:8px;margin-bottom:0;border:1px solid #2a2a3a;box-shadow:0 8px 20px rgba(0,0,0,.6)}
+    .pv-panel #canvas{width:calc(36vh*9/16);width:calc(36dvh*9/16);flex:0 0 auto;margin:0}
+    .pv-side{order:0;flex:1;min-width:0;flex-direction:column;align-items:stretch;justify-content:flex-start;margin:0}
+    .pv-side .status{text-align:left!important;font-size:12px}
+    #pvToggle{display:block;min-height:38px;padding:8px 10px;font-size:12px;flex:none}
+    .col-left.pv-big .pv-panel{flex-direction:column}
+    .col-left.pv-big .pv-panel #canvas{width:min(100%,calc(62vh*9/16));width:min(100%,calc(62dvh*9/16));margin:0 auto}
+    .col-left.pv-big .pv-side{order:2;flex-direction:row;align-items:center}
+    body.genning .col-left{position:static}
   }
   @media(min-width:900px){
     .layout{grid-template-columns:320px minmax(0,1fr)}
+    .col-left{position:sticky;top:12px;align-self:start}
+    #canvas{width:min(100%,calc(70vh*9/16));width:min(100%,calc(70dvh*9/16))}
+    #customBgList{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))!important}
+    body.genning .col-left{position:static}
     h1{font-size:24px}body{padding:20px}
     button{flex:0 1 auto;font-size:14px;padding:12px 22px;min-height:auto}
     .videos{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
     table{font-size:13px}
   }
+  /* ===== rapih-rapih UI (tanpa ubah fungsi) ===== */
+  .hint{font-size:11px;color:#9aa;line-height:1.45}
+  .hint b{color:#cfd}
+  details.fold{margin-top:8px;background:#0f0f18;border:1px solid #2a2a3a;border-radius:10px}
+  details.fold>summary{list-style:none;cursor:pointer;padding:12px;font-size:13px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px;user-select:none;-webkit-user-select:none}
+  details.fold>summary::-webkit-details-marker{display:none}
+  details.fold>summary::after{content:'▾';color:#889;font-size:14px;transition:transform .2s}
+  details.fold:not([open])>summary::after{transform:rotate(-90deg)}
+  details.fold>.fold-body{padding:0 12px 12px}
+  details.fold.plain{margin-top:0;background:none;border:0;border-radius:0}
+  details.fold.plain>summary{padding:0 0 10px}
+  details.fold.plain>.fold-body{padding:0}
+  details.fold .kv-panel{margin-top:0;padding:0;border:0;background:none}
+  details.fold #plBox{margin-top:0;padding:0;border:0;background:none}
+  details.fold #plBox>h4{display:none}
+  #outroPanel label.chk,#customBgPanel label.chk{flex:1 1 100%;padding:4px 0}
+  #customBgList{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .pv-panel{display:flex;flex-direction:column}
+  .pv-side{display:flex;justify-content:space-between;align-items:center;gap:8px;order:-1;margin-bottom:8px}
+  .pv-side h3{font-size:13px}
+  .pv-side .status{margin:0}
+  #pvToggle{display:none}
   .done-head{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
   .done-head button{flex:1 1 140px;min-height:40px;padding:8px;font-size:12px}
   .done-item{display:flex;align-items:center;gap:6px;background:#0f0f18;border-radius:8px;padding:6px 8px;margin-bottom:5px;font-size:12px;flex-wrap:wrap}
@@ -113,10 +150,13 @@
 
   <div class="layout">
     <div class="col-left">
-      <div class="panel">
-        <h3 style="font-size:13px;margin-bottom:10px;">📺 Preview</h3>
+      <div class="panel pv-panel">
         <canvas id="canvas"></canvas>
-        <div class="status" id="previewLabel" style="text-align:center"></div>
+        <div class="pv-side">
+          <h3>📺 Preview</h3>
+          <div class="status" id="previewLabel"></div>
+          <button type="button" id="pvToggle" class="sec">🔍 Perbesar</button>
+        </div>
       </div>
     </div>
 
@@ -126,6 +166,10 @@
           <button id="genOne" disabled style="flex:1;">▶ Test video ini</button>
           <button id="genAll" class="sec" disabled style="flex:1;">🎬 Gen All</button>
         </div>
+        <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="status" id="status2"></div>
+        <div class="chips" id="chips"></div>
+        <details class="fold" open><summary>⚙️ Pengaturan tampilan</summary><div class="fold-body">
         <div class="row" style="margin-top:10px;">
           <label class="chk"><input type="checkbox" id="addAudio" checked> Beat audio</label>
           <button id="shuffle" class="sec" disabled style="flex:0 0 auto;min-height:40px;padding:8px 14px;font-size:13px">🔀 Acak ulang</button>
@@ -143,16 +187,37 @@
           </select>
         </div>
         <div class="row"><label class="chk"><input type="checkbox" id="safeZone" checked> Safe zone</label></div>
+        <div class="row" style="margin-top:6px;">
+          <select id="palSelect" style="flex:1 1 100%;min-height:40px;background:#0f0f18;color:#fff;border:1px solid #2a2a3a;border-radius:8px;padding:8px;font-size:14px"></select>
+        </div>
+        <div class="row" style="margin-top:6px;">
+          <button id="rollTpl" class="sec" style="min-height:40px;padding:8px 14px;font-size:13px">🔄 Roll Template</button>
+          <button id="rollBg" class="sec" style="min-height:40px;padding:8px 14px;font-size:13px">🔄 Roll Latar</button>
+          <button id="rollPal" class="sec" style="min-height:40px;padding:8px 14px;font-size:13px">🎨 Roll Warna</button>
+          <button id="swapTB" class="sec" style="min-height:40px;padding:8px 14px;font-size:13px">↔ Tukar</button>
+        </div>
+        <div class="row" style="margin-top:6px;">
+          <label class="chk"><input type="checkbox" id="dropPast" checked> Buang jadwal lewat tanggal</label>
+        </div>
+        </div></details>
+        <details class="fold"><summary>💾 Simpan video (IndexedDB)</summary><div class="fold-body">
         <div class="kv-panel">
           <label class="chk" style="padding:0"><input type="checkbox" id="autoKV" checked> <b>💾 Simpan video ke IndexedDB (untuk player)</b></label>
           <div class="kv-ok">Video disimpan di browser ini, tanpa server. <span id="bridgeSt"></span></div>
           <div id="kvStat"></div>
         </div>
 
+        </div></details>
+        <details class="fold"><summary>🎬 Generate Player Script</summary><div class="fold-body">
         <div id="plBox">
           <h4>🎬 Generate Player Script (judul per video)</h4>
           <label>Caption template (global)</label>
           <input id="plCap" value="https://sportfusion.online | VISIT : Sport Fusion Web">
+          <label style="color:#FFD60A;margin-top:10px">🔗 Link Amazon Affiliate (HS Jersey)</label>
+          <textarea id="plAmazon" rows="3" style="width:100%;padding:8px;border-radius:6px;border:1px solid #2a2a3a;background:#16161f;color:#fff;font-size:12px;font-family:monospace" placeholder="1 link per baris = rotasi per video">https://link.amazon/B0ik9zYmN</textarea>
+          <div style="font-size:10px;color:#888;margin-top:4px;line-height:1.3">Isi 1 link = dipakai di semua 20 video. Isi banyak link dipisah baris baru = otomatis rotasi per video (buat test USA jersey, Mexico jersey, Custom jersey). Kosongkan kalau gak mau pakai.</div>
+          <label class="chk" style="margin-top:6px"><input type="checkbox" id="plAmazonFirst" checked> Taruh link Amazon di baris pertama caption (biar paling atas, gampang klik)</label>
+          <label class="chk"><input type="checkbox" id="plAmazonAd" checked> Auto tambahin #ad + hashtag sesuai olahraga (mis. #HSFootball #YouthFootball)</label>
           <label>Delay antar post (detik)</label>
           <input id="plDelay" type="number" value="10" min="3">
           <label style="color:#c4b5fd;margin-top:10px">⚡ Pengaturan kecepatan</label>
@@ -177,21 +242,53 @@
           </div>
         </div>
 
-        <div class="row" style="margin-top:6px;">
-          <select id="palSelect" style="flex:1 1 100%;min-height:40px;background:#0f0f18;color:#fff;border:1px solid #2a2a3a;border-radius:8px;padding:8px;font-size:14px"></select>
+        </div></details>
+      </div>
+
+      <div class="panel" id="outroPanel" style="border:2px solid #FFD60A;background:linear-gradient(135deg,#16161f,#1f1a0f)">
+        <details class="fold plain"><summary>🖼️ Outro — gambar di ujung video</summary><div class="fold-body">
+        <div class="hint" style="margin-bottom:8px">Gambar promo yang tampil di detik terakhir semua video.</div>
+        <div class="row" style="flex-direction:column;align-items:stretch;gap:8px;">
+          <input type="file" id="outroInput" accept="image/*">
+          <div class="row" style="gap:8px;">
+            <label class="chk"><input type="checkbox" id="outroEnabled" checked> Aktifkan outro</label>
+            <label class="chk"><input type="checkbox" id="outroFullCover" checked> Full cover (tutup video)</label>
+          </div>
+          <div class="row" style="gap:8px;align-items:center;">
+            <label style="font-size:12px;min-width:90px">Durasi outro:</label>
+            <input type="range" id="outroDur" min="1" max="5" step="0.5" value="3" style="flex:1">
+            <span id="outroDurLabel" style="font-size:12px;color:#FFD60A;font-weight:700;min-width:35px">3s</span>
+          </div>
+          <div id="outroPreviewWrap" style="display:none;background:#0f0f18;border-radius:8px;padding:8px;border:1px solid #2a2a3a">
+            <div style="font-size:11px;color:#888;margin-bottom:6px;">Preview Outro (akan muncul di detik akhir):</div>
+            <img id="outroPreview" style="width:100%;max-width:200px;aspect-ratio:9/16;object-fit:cover;border-radius:6px;background:#000;display:block;margin:0 auto;border:1px solid #333">
+            <div id="outroInfo" style="font-size:11px;color:#6ee7b7;margin-top:6px;text-align:center"></div>
+            <button id="outroClear" class="sec" style="margin-top:6px;width:100%;min-height:36px;font-size:12px">🗑 Hapus Outro</button>
+          </div>
         </div>
-        <div class="row" style="margin-top:6px;">
-          <button id="rollTpl" class="sec" style="min-height:40px;padding:8px 14px;font-size:13px">🔄 Roll Template</button>
-          <button id="rollBg" class="sec" style="min-height:40px;padding:8px 14px;font-size:13px">🔄 Roll Latar</button>
-          <button id="rollPal" class="sec" style="min-height:40px;padding:8px 14px;font-size:13px">🎨 Roll Warna</button>
-          <button id="swapTB" class="sec" style="min-height:40px;padding:8px 14px;font-size:13px">↔ Tukar</button>
+        </div></details>
+      </div>
+
+      <div class="panel" id="customBgPanel" style="border:2px solid #0A84FF;background:linear-gradient(135deg,#16161f,#101a2a)">
+        <details class="fold plain" open><summary>🏟️ Latar custom per olahraga</summary><div class="fold-body">
+        <div class="hint" style="margin-bottom:8px">Upload gambar latar (bisa banyak sekaligus). Nama file bebas: setelah upload, pilih olahraganya di kartu gambar. Nama seperti <b>football.jpg</b>, <b>soccer.png</b>, <b>flag football.jpg</b> terdeteksi otomatis.</div>
+        <div class="row" style="flex-direction:column;align-items:stretch;gap:8px;">
+          <input type="file" id="customBgInput" accept="image/*,.jpg,.jpeg,.png,.webp" multiple>
+          <div class="row" style="gap:8px;">
+            <label class="chk"><input type="checkbox" id="customBgEnabled" checked> Aktifkan latar custom</label>
+            <label class="chk"><input type="checkbox" id="customBgUseDefaultIfMissing" checked> Kalau gak ada gambar, pakai latar template biasa</label>
+          </div>
+          <div class="row" style="gap:8px;align-items:center;margin-top:4px">
+            <label style="font-size:12px;min-width:90px">Gelap latar:</label>
+            <input type="range" id="customBgDarkness" min="0" max="90" step="5" value="55" style="flex:1">
+            <span id="customBgDarknessLabel" style="font-size:12px;color:#0A84FF;font-weight:700;min-width:40px">55%</span>
+            <div class="hint" style="flex:1 1 100%">0% = terang · 90% = gelap (teks lebih kontras)</div>
+          </div>
+          <div id="customBgList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:6px"></div>
+          <div id="customBgStatus" style="font-size:11px;color:#6ee7b7;margin-top:6px"></div>
+          <button id="customBgClear" class="sec" style="margin-top:6px;width:100%;min-height:36px;font-size:12px">🗑 Hapus Semua Latar Custom</button>
         </div>
-        <div class="row" style="margin-top:6px;">
-          <label class="chk"><input type="checkbox" id="dropPast" checked> Buang jadwal lewat tanggal</label>
-        </div>
-        <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
-        <div class="status" id="status2"></div>
-        <div class="chips" id="chips"></div>
+        </div></details>
       </div>
 
       <div class="panel panel-data">
@@ -229,6 +326,134 @@ let previewData = null;
 let selIdx = 0;
 let previewStart = performance.now();
 let recording = false;
+
+// ==================== OUTRO IMAGE (HS JERSEY PROMO) ====================
+let outroImg = null;
+let outroLoaded = false;
+let OUTRO_DUR = 3; // durasi outro di akhir video
+let outroEnabled = true;
+let outroFullCover = true;
+
+// ==================== CUSTOM BG PER OLAHRAGA ====================
+let customBgMap = {}; // sportKey -> {img, name, url}
+const CUSTOM_SPORT_KEYS = ['football','soccer','volleyball','basketball','baseball','softball','flag football','water polo','beach volleyball','lacrosse','field hockey','ice hockey','hockey','rugby','tennis','badminton','golf','futsal'].sort((a, b) => b.length - a.length);
+function normalizeSportKey(s){
+  const low = (s||'').toLowerCase();
+  for (const k of CUSTOM_SPORT_KEYS) {
+    if (low.includes(k)) return k;
+  }
+  return low.trim();
+}
+function getCustomBgForSport(sport){
+  if (!sport) return null;
+  const key = normalizeSportKey(sport);
+  if (!key) return null;
+  if (customBgMap[key]) return customBgMap[key];
+  for (const k in customBgMap) { if (k && k !== '*' && key.includes(k)) return customBgMap[k]; }
+  return customBgMap['*'] || null;
+}
+// true = latar custom aktif, ada gambar, tapi "pakai latar template kalau tidak ada" dimatikan
+function customBgStrict(){
+  const e = document.getElementById('customBgEnabled'), u = document.getElementById('customBgUseDefaultIfMissing');
+  return !!(e && e.checked && u && !u.checked && Object.keys(customBgMap).length);
+}
+function drawCustomBackground(t, theme, imgObj){
+  const img = imgObj.img;
+  if (!img) return;
+  const darknessEl = document.getElementById('customBgDarkness');
+  const darkness = darknessEl ? parseInt(darknessEl.value) / 100 : 0.55;
+  // slight zoom & pan biar hidup
+  const zoom = 1 + 0.08 * Math.sin(t * 0.15);
+  const panX = Math.sin(t * 0.1) * 40;
+  const panY = Math.cos(t * 0.08) * 30;
+  const canvasRatio = W / H;
+  const imgRatio = img.width / img.height;
+  let baseW, baseH;
+  if (imgRatio > canvasRatio) {
+    baseH = H * zoom;
+    baseW = baseH * imgRatio;
+  } else {
+    baseW = W * zoom;
+    baseH = baseW / imgRatio;
+  }
+  // clamp: gambar harus selalu menutup seluruh kanvas (kalau tidak, tepi bergaris hitam di awal/akhir video)
+  const dx = Math.min(0, Math.max(W - baseW, (W - baseW)/2 + panX));
+  const dy = Math.min(0, Math.max(H - baseH, (H - baseH)/2 + panY));
+  ctx.save();
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  ctx.drawImage(img, dx, dy, baseW, baseH);
+  // overlay gelap biar teks kebaca - pakai slider darkness
+  const grad = ctx.createLinearGradient(0,0,0,H);
+  const d0 = 0.15 + darkness * 0.3;
+  const d1 = 0.25 + darkness * 0.4;
+  const d2 = 0.45 + darkness * 0.35;
+  const d3 = 0.65 + darkness * 0.25;
+  grad.addColorStop(0, `rgba(0,0,0,${d0})`);
+  grad.addColorStop(0.3, `rgba(0,0,0,${d1})`);
+  grad.addColorStop(0.7, `rgba(0,0,0,${d2})`);
+  grad.addColorStop(1, `rgba(0,0,0,${d3})`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,W,H);
+  // vignette + primary color tint halus - biar sport theme tetep keliatan
+  ctx.fillStyle = theme.primary + '18';
+  ctx.fillRect(0,0,W,H);
+  // extra dark for text safety area
+  ctx.fillStyle = `rgba(0,0,0,${0.2 + darkness*0.3})`;
+  ctx.fillRect(0, 0, W, 180);
+  ctx.fillRect(0, H-180, W, 180);
+  ctx.restore();
+}
+
+
+function drawOutroImage(t) {
+  if (!outroLoaded || !outroImg || !outroEnabled) return false;
+  if (t < DUR - OUTRO_DUR) return false;
+  const progress = (t - (DUR - OUTRO_DUR)) / OUTRO_DUR;
+  const fade = Math.min(1, progress * 3); // fade in 0.33s
+  ctx.save();
+  ctx.globalAlpha = fade;
+  if (outroFullCover) {
+    // cover full canvas - contain logic biar 9:16 tetap bagus
+    const img = outroImg;
+    const canvasRatio = W / H;
+    const imgRatio = img.width / img.height;
+    let dw, dh, dx, dy;
+    if (imgRatio > canvasRatio) {
+      // image lebih lebar, fit height
+      dh = H;
+      dw = dh * imgRatio;
+      dx = (W - dw) / 2;
+      dy = 0;
+    } else {
+      dw = W;
+      dh = dw / imgRatio;
+      dx = 0;
+      dy = (H - dh) / 2;
+    }
+    // kalau full cover mau stretch exact biar promo HS keliatan full
+    if (document.getElementById('outroFullCover') && document.getElementById('outroFullCover').checked) {
+      ctx.drawImage(img, 0, 0, W, H);
+    } else {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0,0,W,H);
+      ctx.drawImage(img, dx, dy, dw, dh);
+    }
+  } else {
+    // overlay kecil di bawah
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.fillRect(0, H-700, W, 700);
+    const img = outroImg;
+    const maxW = W - 80;
+    const maxH = 620;
+    const ratio = Math.min(maxW / img.width, maxH / img.height);
+    const dw = img.width * ratio;
+    const dh = img.height * ratio;
+    ctx.drawImage(img, (W-dw)/2, H-680 + (620-dh)/2, dw, dh);
+  }
+  ctx.restore();
+  return true;
+}
+
 
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -307,6 +532,7 @@ function parseRow(row) {
     watchLabel: String(row.watch_label || 'WATCH HERE').trim(),
     watchLink: String(row.watch_link || '').trim(),
     videoTitle: String(row.video_title || '').trim(),
+    amazonLink: (() => { for (const k of Object.keys(row)) { if (/^amazon|^affiliate/.test(String(k).trim().toLowerCase().replace(/[^a-z0-9]+/g, '_'))) { const v = String(row[k] || '').trim(); if (v) return v; } } return ''; })(),
   };
 }
 
@@ -685,7 +911,15 @@ function drawFrame(t, d, cover) {
   }
   t = Math.min(t, DUR - 0.001);
   const theme = getTheme(d);
-  drawBackground(t, theme, d.bgKey || d.tpl);
+  // === CUSTOM BG PER OLAHRAGA (football.jpg, soccer.jpg dll) ===
+  const customBg = !cover ? getCustomBgForSport(d.sport || d.sport1 || d.title) : null;
+  if (customBg) {
+    drawCustomBackground(t, theme, customBg);
+  } else if (!cover && customBgStrict()) {
+    ctx.fillStyle = theme.bg || '#0b0b12'; ctx.fillRect(0, 0, W, H);
+  } else {
+    drawBackground(t, theme, d.bgKey || d.tpl);
+  }
   let phase = tpl.phases[0];
   for (const p of tpl.phases) if (t >= p.start && t < p.end) phase = p;
   const localT = clamp01((t - phase.start) / (phase.end - phase.start));
@@ -699,6 +933,10 @@ function drawFrame(t, d, cover) {
   ctx.restore();
   drawBars(t, d, theme);
   drawInfoChip(t, d, theme);
+  // === OUTRO HS JERSEY PROMO di ujung semua video ===
+  if (!cover) {
+    drawOutroImage(t);
+  }
 }
 function drawInfoChip(t, d, th) {
   const dt = (d.date || '').split(/\s+/);
@@ -1295,7 +1533,7 @@ genAllBtn.addEventListener('click', async () => {
       VERSION: '2.7.' + Date.now(),
       GEN_MATCH: genMatch,
       WATCH_LINK: JSON.stringify(firstUrl),
-      REPLACE_LINKS: firstUrl ? 'true' : 'false',
+      REPLACE_LINKS: 'false',   // caption sudah dibuat per video di generator (link Amazon beda-beda), jangan diseragamkan
       DELAY: String(Math.round(sv.DELAY)),
       SPEED: String(sv.SPEED),
       NEXTCD: String(Math.round(sv.NEXTCD)),
@@ -1318,7 +1556,37 @@ genAllBtn.addEventListener('click', async () => {
     // caption: split input pakai pipe | jadi baris baru
     const capRaw = $('plCap').value || '';
     const capLines = capRaw.replace(/\|/g, '\n').trim();
-    const captions = rows.map(() => capLines);
+    const amazonRaw = ($('plAmazon') ? $('plAmazon').value : '').trim();
+    const amazonLines = amazonRaw.split(/[\s,]+/).filter(Boolean);
+    const amazonFirst = $('plAmazonFirst') ? $('plAmazonFirst').checked : true;
+    const amazonAd = $('plAmazonAd') ? $('plAmazonAd').checked : true;
+    // hashtag otomatis sesuai olahraga: Football -> #HSFootball #YouthFootball, Flag Football -> #HSFlagFootball ...
+    const sportHashtags = sport => {
+      const key = String(normalizeSportKey(sport || '') || '').replace(/[^a-z0-9 ]+/g, ' ').trim();
+      if (!key) return '#ad #HighSchoolSports #YouthSports';
+      const camel = key.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
+      const extra = key === 'football' ? ' #FridayNightLights' : '';
+      return '#ad #HS' + camel + ' #Youth' + camel + extra;
+    };
+    const captions = rows.map((r, i) => {
+      let cap = capLines;
+      // prioritas: kalau Excel ada kolom amazon_link per baris, pakai itu dulu bos!
+      let amazonLink = '';
+      if (r.amazonLink) {
+        amazonLink = r.amazonLink;
+      } else if (amazonLines.length) {
+        amazonLink = amazonLines[i % amazonLines.length];
+      }
+      if (amazonLink) {
+        const adTag = amazonAd ? '\n' + sportHashtags(r.sport) : '';
+        if (amazonFirst) {
+          cap = amazonLink + '\n\n' + cap + adTag;
+        } else {
+          cap = cap + '\n\n🛒 Shop Jersey: ' + amazonLink + adTag;
+        }
+      }
+      return cap;
+    });
     playerCode = buildPlayer(titles, captions);
     const kb = (new Blob([playerCode]).size/1024).toFixed(1);
     const lines = playerCode.split('\n').length;
@@ -1347,7 +1615,269 @@ genAllBtn.addEventListener('click', async () => {
   });
 })();
 
+
+// ==================== OUTRO IMAGE HANDLER (HS JERSEY PROMO) ====================
+(function(){
+  const inp = document.getElementById('outroInput');
+  const enabledChk = document.getElementById('outroEnabled');
+  const fullChk = document.getElementById('outroFullCover');
+  const durRange = document.getElementById('outroDur');
+  const durLabel = document.getElementById('outroDurLabel');
+  const previewWrap = document.getElementById('outroPreviewWrap');
+  const previewImg = document.getElementById('outroPreview');
+  const info = document.getElementById('outroInfo');
+  const clearBtn = document.getElementById('outroClear');
+
+  if (!inp) return;
+
+  function updateDurLabel(){
+    const v = parseFloat(durRange.value);
+    OUTRO_DUR = v;
+    durLabel.textContent = v + 's';
+    if (previewData) setPreview(selIdx, false);
+  }
+  durRange.addEventListener('input', updateDurLabel);
+  durRange.addEventListener('change', updateDurLabel);
+
+  enabledChk.addEventListener('change', e => {
+    outroEnabled = e.target.checked;
+    if (previewData) setPreview(selIdx, false);
+  });
+  fullChk.addEventListener('change', e => {
+    outroFullCover = e.target.checked;
+    if (previewData) setPreview(selIdx, false);
+  });
+
+  inp.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        outroImg = img;
+        outroLoaded = true;
+        previewImg.src = ev.target.result;
+        previewWrap.style.display = 'block';
+        info.textContent = `✅ ${img.width}x${img.height} • ${(file.size/1024).toFixed(1)}KB — Akan muncul di ${OUTRO_DUR}s terakhir SEMUA video (20 jadwal Excel)`;
+        // simpan ke localStorage biar persisten? simpan sebagai dataURL
+        sPut('meta', 'asset:outro', file);
+        if (previewData) setPreview(selIdx, true);
+      };
+      img.onerror = () => { info.textContent = '❌ Gagal load gambar'; };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    outroImg = null;
+    outroLoaded = false;
+    inp.value = '';
+    previewWrap.style.display = 'none';
+    previewImg.src = '';
+    info.textContent = '';
+    sDel('meta', 'asset:outro'); try { localStorage.removeItem('hs_outro_img'); } catch(e){}
+    if (previewData) setPreview(selIdx, false);
+  });
+
+  // auto-load dari IndexedDB (migrasi otomatis dari localStorage lama kalau ada)
+  (async () => {
+    try {
+      let blob = await sGet('meta', 'asset:outro'), saved = null;
+      if (blob) saved = URL.createObjectURL(blob);
+      else {
+        const legacy = localStorage.getItem('hs_outro_img');
+        if (legacy) {
+          saved = legacy;
+          try { await sPut('meta', 'asset:outro', await (await fetch(legacy)).blob()); localStorage.removeItem('hs_outro_img'); } catch(e){}
+        }
+      }
+      if (!saved) return;
+      const img = new Image();
+      img.onload = () => {
+        outroImg = img; outroLoaded = true;
+        previewImg.src = saved; previewWrap.style.display = 'block';
+        info.textContent = `💾 Outro tersimpan • ${img.width}x${img.height} — otomatis di semua video`;
+      };
+      img.src = saved;
+    } catch(e){}
+  })();
+
+  // preload gambar promo HS default dari gallery kalau ada (optional)
+  // user bisa upload manual poster Mexico $29.99 yang tadi gue bikin
+})();
+
+// ==================== CUSTOM BG HANDLER PER OLAHRAGA ====================
+(function(){
+  const inp = document.getElementById('customBgInput');
+  const enabledChk = document.getElementById('customBgEnabled');
+  const listEl = document.getElementById('customBgList');
+  const statusEl = document.getElementById('customBgStatus');
+  const clearBtn = document.getElementById('customBgClear');
+  if (!inp) return;
+
+  const E2 = s => esc(String(s)).replace(/"/g, '&quot;');
+  function sportOptions(cur){
+    const list = ['*'].concat(CUSTOM_SPORT_KEYS.slice().sort());
+    if (!list.includes(cur)) list.push(cur);
+    return list.map(k => `<option value="${E2(k)}"${k === cur ? ' selected' : ''}>${k === '*' ? '🌐 Semua olahraga' : (CUSTOM_SPORT_KEYS.includes(k) ? k : k + ' (belum diatur)')}</option>`).join('');
+  }
+  // pindahkan gambar ke olahraga lain (hasil pilihan di kartu), simpan ulang ke IndexedDB
+  function rekeyBg(oldK, newK){
+    const obj = customBgMap[oldK];
+    if (!obj || !newK || oldK === newK) return;
+    if (customBgMap[newK]) { try { URL.revokeObjectURL(customBgMap[newK].url); } catch(e){} }
+    delete customBgMap[oldK]; sDel('meta', 'asset:bg:' + oldK);
+    obj.key = newK; customBgMap[newK] = obj;
+    if (obj.blob) sPut('meta', 'asset:bg:' + newK, { blob: obj.blob, name: obj.name });
+    renderList();
+  }
+  function renderList(){
+    listEl.innerHTML = '';
+    const keys = Object.keys(customBgMap);
+    if (!keys.length) {
+      listEl.innerHTML = '<div style="font-size:11px;color:#666;grid-column:1/-1">Belum ada gambar. Upload football.jpg, soccer.jpg, dll.</div>';
+      statusEl.textContent = '';
+      return;
+    }
+    keys.forEach(k => {
+      const obj = customBgMap[k];
+      const div = document.createElement('div');
+      div.style.cssText = 'background:#0f0f18;border-radius:8px;padding:6px;border:1px solid #2a2a3a;display:flex;flex-direction:column;gap:4px';
+      const E = s => esc(String(s)).replace(/"/g, '&quot;');
+      div.innerHTML = `
+        <img src="${obj.url}" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:4px;background:#000">
+        <div style="font-size:11px;font-weight:700;color:#0A84FF;word-break:break-all">${E(obj.name)}</div>
+        <div style="font-size:10px;color:#aaa">Dipakai untuk olahraga:</div>
+        <select data-sel="${E(k)}" style="width:100%;padding:6px;border-radius:6px;border:1px solid #2a2a3a;background:#16161f;color:#fff;font-size:11px">${sportOptions(k)}</select>
+        <div style="font-size:10px;color:#888">${obj.img.width}x${obj.img.height}</div>
+        <button data-k="${E(k)}" class="sec" style="font-size:10px;min-height:28px;padding:4px">Hapus</button>
+      `;
+      listEl.appendChild(div);
+    });
+    listEl.querySelectorAll('select[data-sel]').forEach(sel => sel.addEventListener('change', () => rekeyBg(sel.dataset.sel, sel.value)));
+    statusEl.textContent = `✅ ${keys.length} latar custom aktif: ${keys.map(k => k === '*' ? 'semua olahraga' : k).join(', ')} — dipakai otomatis sesuai sport di Excel. Salah olahraga? Ganti lewat pilihan di tiap gambar.`;
+    listEl.querySelectorAll('button[data-k]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const k = btn.dataset.k;
+        if (customBgMap[k]) {
+          try { URL.revokeObjectURL(customBgMap[k].url); } catch(e){}
+          delete customBgMap[k];
+          sDel('meta', 'asset:bg:' + k); try { localStorage.removeItem('custom_bg_' + k); } catch(e){}
+          renderList();
+          if (previewData) setPreview(selIdx, true);
+        }
+      });
+    });
+    if (previewData) setPreview(selIdx, true);
+  }
+
+  inp.addEventListener('change', e => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    let loaded = 0;
+    const claimed = new Set();
+    files.forEach(file => {
+      const name = file.name.toLowerCase().replace(/[-_]+/g, ' ');
+      // deteksi sport dari nama file: football.jpg, soccer.png, volleyball.webp, flag football.jpg dll
+      let detectedKey = null;
+      // cek exact atau contains dari CUSTOM_SPORT_KEYS
+      for (const sportKey of CUSTOM_SPORT_KEYS) {
+        if (name.includes(sportKey)) { detectedKey = sportKey; break; }
+      }
+      // nama file tidak dikenali (mis. 1000019756.jpg dari galeri HP): pakai sport baris yang sedang di-preview,
+      // kalau sudah terpakai / belum ada Excel -> '*' (semua olahraga). Bisa diganti lewat pilihan di kartu gambar.
+      if (!detectedKey) {
+        const pv = (typeof previewData !== 'undefined' && previewData && previewData.sport) ? normalizeSportKey(previewData.sport) : '';
+        detectedKey = (pv && !customBgMap[pv] && !claimed.has(pv)) ? pv : '*';
+      }
+      claimed.add(detectedKey);
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          const url = ev.target.result;
+          customBgMap[detectedKey] = { img, name: file.name, url, key: detectedKey, blob: file };
+          sPut('meta', 'asset:bg:' + detectedKey, { blob: file, name: file.name });
+          loaded++;
+          if (loaded === files.length) {
+            renderList();
+          } else {
+            // render interim biar user lihat progress
+            if (loaded === 1) renderList();
+          }
+        };
+        img.onerror = () => { loaded++; statusEl.textContent = '❌ Gagal load ' + file.name; if (loaded === files.length) renderList(); };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+    // reset input biar bisa upload file sama lagi
+    e.target.value = '';
+  });
+
+  clearBtn.addEventListener('click', () => {
+    if (!Object.keys(customBgMap).length) return;
+    if (!confirm('Hapus semua latar custom?')) return;
+    for (const k in customBgMap) {
+      try { URL.revokeObjectURL(customBgMap[k].url); } catch(e){}
+      sDel('meta', 'asset:bg:' + k); try { localStorage.removeItem('custom_bg_' + k); } catch(e){}
+    }
+    customBgMap = {};
+    renderList();
+  });
+
+  enabledChk.addEventListener('change', e => {
+    const on = e.target.checked;
+    if (on) {
+      // reload from storage kalau dimatikan sebelumnya
+      renderList();
+    } else {
+      statusEl.textContent = '⏸ Latar custom dimatikan — pakai template biasa';
+    }
+    if (previewData) setPreview(selIdx, true);
+  });
+
+  const darknessSlider = document.getElementById('customBgDarkness');
+  const darknessLabel = document.getElementById('customBgDarknessLabel');
+  if (darknessSlider) {
+    darknessSlider.addEventListener('input', e => {
+      darknessLabel.textContent = e.target.value + '%';
+      if (previewData) setPreview(selIdx, true);
+    });
+  }
+
+  // auto-load dari IndexedDB (+ migrasi dari localStorage lama)
+  (async () => {
+    try {
+      const legacyKeys = [];
+      for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith('custom_bg_')) legacyKeys.push(k); }
+      for (const lk of legacyKeys) {
+        try { const du = localStorage.getItem(lk); if (du) { await sPut('meta', 'asset:bg:' + lk.replace('custom_bg_', ''), { blob: await (await fetch(du)).blob(), name: lk.replace('custom_bg_', '') + ' (saved)' }); localStorage.removeItem(lk); } } catch(e){}
+      }
+      for (const key of (await sKeys('meta')).filter(k => String(k).startsWith('asset:bg:'))) {
+        const rec = await sGet('meta', key); if (!rec || !rec.blob) continue;
+        const sportKey = String(key).slice('asset:bg:'.length), url = URL.createObjectURL(rec.blob), img = new Image();
+        img.onload = () => { customBgMap[sportKey] = { img, name: rec.name || (sportKey + ' (saved)'), url, key: sportKey, blob: rec.blob }; renderList(); };
+        img.src = url;
+      }
+    } catch(e){}
+  })();
+
+  renderList();
+
+  // override getCustomBgForSport untuk cek enabled
+  const origGet = getCustomBgForSport;
+  window.getCustomBgForSport = function(s){
+    const enabled = document.getElementById('customBgEnabled');
+    if (enabled && !enabled.checked) return null;
+    return origGet(s);
+  };
+})();
+
 // ==================== INIT RESUME ====================
+
 (async function initResume() {
   try {
     const sess = await sGet('meta', 'session');
@@ -1376,7 +1906,7 @@ genAllBtn.addEventListener('click', async () => {
     });
     document.getElementById('rbDel').addEventListener('click', async () => {
       if (!confirm('Hapus sesi & semua hasil?')) return;
-      await sClear('meta'); await sClear('results'); await sClear('resmeta');
+      for (const k of await sKeys('meta')) if (!String(k).startsWith('asset:')) await sDel('meta', k); await sClear('results'); await sClear('resmeta');
       bar.remove();
     });
   } catch (e) {}
@@ -2535,6 +3065,14 @@ addLog('✅ FB menerima file, upload dimulai (mode=' + usedMode + ')');
   setInterval(ensureUI, 3000);
   addLog('UserScript v2.7 loaded. ' + POSTS.length + ' post, video id pattern: 01,02,... (pad='+CONFIG.videoIdPad+')');
   console.log('[JHON VIDEO+STEPS v2.7·gen] Loaded');
+})();
+</script>
+<script>
+// tombol Perbesar/Kecilkan preview (HP) — murni tampilan
+(function(){
+  const b = document.getElementById('pvToggle'), c = document.querySelector('.col-left');
+  if (!b || !c) return;
+  b.addEventListener('click', () => { const big = c.classList.toggle('pv-big'); b.textContent = big ? '🔍 Kecilkan' : '🔍 Perbesar'; });
 })();
 </script>
 </body>
